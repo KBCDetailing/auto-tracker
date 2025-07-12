@@ -4,26 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auto Detailing Business Tracker</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-react/0.263.1/umd/lucide-react.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         }
+        .icon {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState } = React;
-        const { Calendar, DollarSign, Clock, User, Plus, Search, Edit2, Save, X, Trash2, Download } = LucideReact;
+    <script>
+        const { useState, createElement: h } = React;
 
-        const AutoDetailingTracker = () => {
+        function AutoDetailingTracker() {
             const [entries, setEntries] = useState([
                 {
                     id: 1,
@@ -275,477 +278,443 @@
             const thisWeek = getWeeklyData(0);
             const lastWeek = getWeeklyData(1);
 
-            return (
-                React.createElement('div', { className: "max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen" },
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-lg p-6 mb-6" },
-                        React.createElement('h1', { className: "text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2" },
-                            React.createElement(DollarSign, { className: "text-green-600" }),
-                            "Auto Detailing Business Tracker"
+            return h('div', { className: "max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen" },
+                h('div', { className: "bg-white rounded-lg shadow-lg p-6 mb-6" },
+                    h('h1', { className: "text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2" },
+                        h('span', { className: "text-green-600" }, "💰"),
+                        "Auto Detailing Business Tracker"
+                    ),
+                    h('p', { className: "text-gray-600" }, "Track daily income and Gus's hours/pay"),
+                    h('button', {
+                        onClick: exportToCSV,
+                        className: "mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                    },
+                        h('span', null, "📥"),
+                        "Export to CSV"
+                    )
+                ),
+
+                // Quick Stats
+                h('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" },
+                    h('div', { className: "bg-white rounded-lg shadow p-6" },
+                        h('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "This Week"),
+                        h('div', { className: "space-y-2" },
+                            h('p', null, h('span', { className: "font-medium" }, "Total Income:"), ` $${thisWeek.totalIncome.toFixed(2)}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Gus Hours:"), ` ${thisWeek.totalGusHours}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Gus Pay:"), ` $${thisWeek.totalGusPay.toFixed(2)}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Net After Gus:"), ` $${(thisWeek.totalIncome - thisWeek.totalGusPay).toFixed(2)}`)
+                        )
+                    ),
+                    h('div', { className: "bg-white rounded-lg shadow p-6" },
+                        h('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "Last Week"),
+                        h('div', { className: "space-y-2" },
+                            h('p', null, h('span', { className: "font-medium" }, "Total Income:"), ` $${lastWeek.totalIncome.toFixed(2)}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Gus Hours:"), ` ${lastWeek.totalGusHours}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Gus Pay:"), ` $${lastWeek.totalGusPay.toFixed(2)}`),
+                            h('p', null, h('span', { className: "font-medium" }, "Net After Gus:"), ` $${(lastWeek.totalIncome - lastWeek.totalGusPay).toFixed(2)}`)
+                        )
+                    )
+                ),
+
+                // Payment Method Breakdown
+                h('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
+                    h('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "Payment Method Breakdown"),
+                    h('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6" },
+                        h('div', null,
+                            h('h4', { className: "font-medium text-gray-700 mb-3" }, "This Week"),
+                            h('div', { className: "space-y-2" },
+                                (() => {
+                                    const breakdown = getPaymentBreakdown(0);
+                                    return [
+                                        h('div', { key: 'cash', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "💵 Cash:"),
+                                            h('span', { className: "font-medium text-green-600" }, `$${breakdown.cash.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'check', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📝 Check:"),
+                                            h('span', { className: "font-medium text-blue-600" }, `$${breakdown.check.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'invoice', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📄 Invoice:"),
+                                            h('span', { className: "font-medium text-purple-600" }, `$${breakdown.invoice.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'venmo', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📱 Venmo:"),
+                                            h('span', { className: "font-medium text-indigo-600" }, `$${breakdown.venmo.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'paypal', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "💳 PayPal:"),
+                                            h('span', { className: "font-medium text-yellow-600" }, `$${breakdown.paypal.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'other', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "🔄 Other:"),
+                                            h('span', { className: "font-medium text-gray-600" }, `$${breakdown.other.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'total', className: "border-t pt-2 mt-2" },
+                                            h('div', { className: "flex justify-between items-center font-semibold" },
+                                                h('span', null, "Total:"),
+                                                h('span', { className: "text-green-700" }, 
+                                                    `$${(breakdown.cash + breakdown.check + breakdown.invoice + breakdown.venmo + breakdown.paypal + breakdown.other).toFixed(2)}`
+                                                )
+                                            )
+                                        )
+                                    ];
+                                })()
+                            )
                         ),
-                        React.createElement('p', { className: "text-gray-600" }, "Track daily income and Gus's hours/pay"),
-                        React.createElement('button', {
-                            onClick: exportToCSV,
-                            className: "mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                        h('div', null,
+                            h('h4', { className: "font-medium text-gray-700 mb-3" }, "Last Week"),
+                            h('div', { className: "space-y-2" },
+                                (() => {
+                                    const breakdown = getPaymentBreakdown(1);
+                                    return [
+                                        h('div', { key: 'cash', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "💵 Cash:"),
+                                            h('span', { className: "font-medium text-green-600" }, `$${breakdown.cash.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'check', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📝 Check:"),
+                                            h('span', { className: "font-medium text-blue-600" }, `$${breakdown.check.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'invoice', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📄 Invoice:"),
+                                            h('span', { className: "font-medium text-purple-600" }, `$${breakdown.invoice.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'venmo', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "📱 Venmo:"),
+                                            h('span', { className: "font-medium text-indigo-600" }, `$${breakdown.venmo.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'paypal', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "💳 PayPal:"),
+                                            h('span', { className: "font-medium text-yellow-600" }, `$${breakdown.paypal.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'other', className: "flex justify-between items-center py-1" },
+                                            h('span', { className: "text-gray-600" }, "🔄 Other:"),
+                                            h('span', { className: "font-medium text-gray-600" }, `$${breakdown.other.toFixed(2)}`)
+                                        ),
+                                        h('div', { key: 'total', className: "border-t pt-2 mt-2" },
+                                            h('div', { className: "flex justify-between items-center font-semibold" },
+                                                h('span', null, "Total:"),
+                                                h('span', { className: "text-green-700" }, 
+                                                    `$${(breakdown.cash + breakdown.check + breakdown.invoice + breakdown.venmo + breakdown.paypal + breakdown.other).toFixed(2)}`
+                                                )
+                                            )
+                                        )
+                                    ];
+                                })()
+                            )
+                        )
+                    )
+                ),
+
+                // Search/Query
+                h('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
+                    h('h3', { className: "text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2" },
+                        h('span', null, "🔍"),
+                        "Ask Questions"
+                    ),
+                    h('div', { className: "flex gap-2 mb-4" },
+                        h('input', {
+                            type: "text",
+                            value: searchQuery,
+                            onChange: (e) => setSearchQuery(e.target.value),
+                            placeholder: "Ask: 'what did I make this week?' or 'what did I pay Gus last week?'",
+                            className: "flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            onKeyPress: (e) => e.key === 'Enter' && handleSearch()
+                        }),
+                        h('button', {
+                            onClick: handleSearch,
+                            className: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
                         },
-                            React.createElement(Download, { size: 16 }),
-                            "Export to CSV"
+                            h('span', null, "🔍"),
+                            "Ask"
                         )
                     ),
+                    searchResults && h('div', { className: "bg-blue-50 border border-blue-200 rounded-md p-3" },
+                        h('p', { className: "text-blue-800 font-medium" }, searchResults)
+                    )
+                ),
 
-                    // Quick Stats
-                    React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" },
-                        React.createElement('div', { className: "bg-white rounded-lg shadow p-6" },
-                            React.createElement('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "This Week"),
-                            React.createElement('div', { className: "space-y-2" },
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Total Income:"),
-                                    ` $${thisWeek.totalIncome.toFixed(2)}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Gus Hours:"),
-                                    ` ${thisWeek.totalGusHours}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Gus Pay:"),
-                                    ` $${thisWeek.totalGusPay.toFixed(2)}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Net After Gus:"),
-                                    ` $${(thisWeek.totalIncome - thisWeek.totalGusPay).toFixed(2)}`
-                                )
-                            )
-                        ),
-                        React.createElement('div', { className: "bg-white rounded-lg shadow p-6" },
-                            React.createElement('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "Last Week"),
-                            React.createElement('div', { className: "space-y-2" },
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Total Income:"),
-                                    ` $${lastWeek.totalIncome.toFixed(2)}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Gus Hours:"),
-                                    ` ${lastWeek.totalGusHours}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Gus Pay:"),
-                                    ` $${lastWeek.totalGusPay.toFixed(2)}`
-                                ),
-                                React.createElement('p', null,
-                                    React.createElement('span', { className: "font-medium" }, "Net After Gus:"),
-                                    ` $${(lastWeek.totalIncome - lastWeek.totalGusPay).toFixed(2)}`
-                                )
-                            )
-                        )
+                // Add New Entry
+                h('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
+                    h('h3', { className: "text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2" },
+                        h('span', null, "➕"),
+                        "Add New Day"
                     ),
-
-                    // Payment Method Breakdown
-                    React.createElement('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
-                        React.createElement('h3', { className: "text-lg font-semibold text-gray-800 mb-4" }, "Payment Method Breakdown"),
-                        React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6" },
-                            React.createElement('div', null,
-                                React.createElement('h4', { className: "font-medium text-gray-700 mb-3" }, "This Week"),
-                                React.createElement('div', { className: "space-y-2" },
-                                    (() => {
-                                        const breakdown = getPaymentBreakdown(0);
-                                        return [
-                                            React.createElement('div', { key: 'cash', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "💵 Cash:"),
-                                                React.createElement('span', { className: "font-medium text-green-600" }, `$${breakdown.cash.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'check', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📝 Check:"),
-                                                React.createElement('span', { className: "font-medium text-blue-600" }, `$${breakdown.check.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'invoice', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📄 Invoice:"),
-                                                React.createElement('span', { className: "font-medium text-purple-600" }, `$${breakdown.invoice.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'venmo', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📱 Venmo:"),
-                                                React.createElement('span', { className: "font-medium text-indigo-600" }, `$${breakdown.venmo.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'paypal', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "💳 PayPal:"),
-                                                React.createElement('span', { className: "font-medium text-yellow-600" }, `$${breakdown.paypal.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'other', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "🔄 Other:"),
-                                                React.createElement('span', { className: "font-medium text-gray-600" }, `$${breakdown.other.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'total', className: "border-t pt-2 mt-2" },
-                                                React.createElement('div', { className: "flex justify-between items-center font-semibold" },
-                                                    React.createElement('span', null, "Total:"),
-                                                    React.createElement('span', { className: "text-green-700" }, 
-                                                        `$${(breakdown.cash + breakdown.check + breakdown.invoice + breakdown.venmo + breakdown.paypal + breakdown.other).toFixed(2)}`
-                                                    )
-                                                )
-                                            )
-                                        ];
-                                    })()
-                                )
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('h4', { className: "font-medium text-gray-700 mb-3" }, "Last Week"),
-                                React.createElement('div', { className: "space-y-2" },
-                                    (() => {
-                                        const breakdown = getPaymentBreakdown(1);
-                                        return [
-                                            React.createElement('div', { key: 'cash', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "💵 Cash:"),
-                                                React.createElement('span', { className: "font-medium text-green-600" }, `$${breakdown.cash.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'check', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📝 Check:"),
-                                                React.createElement('span', { className: "font-medium text-blue-600" }, `$${breakdown.check.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'invoice', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📄 Invoice:"),
-                                                React.createElement('span', { className: "font-medium text-purple-600" }, `$${breakdown.invoice.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'venmo', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "📱 Venmo:"),
-                                                React.createElement('span', { className: "font-medium text-indigo-600" }, `$${breakdown.venmo.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'paypal', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "💳 PayPal:"),
-                                                React.createElement('span', { className: "font-medium text-yellow-600" }, `$${breakdown.paypal.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'other', className: "flex justify-between items-center py-1" },
-                                                React.createElement('span', { className: "text-gray-600" }, "🔄 Other:"),
-                                                React.createElement('span', { className: "font-medium text-gray-600" }, `$${breakdown.other.toFixed(2)}`)
-                                            ),
-                                            React.createElement('div', { key: 'total', className: "border-t pt-2 mt-2" },
-                                                React.createElement('div', { className: "flex justify-between items-center font-semibold" },
-                                                    React.createElement('span', null, "Total:"),
-                                                    React.createElement('span', { className: "text-green-700" }, 
-                                                        `$${(breakdown.cash + breakdown.check + breakdown.invoice + breakdown.venmo + breakdown.paypal + breakdown.other).toFixed(2)}`
-                                                    )
-                                                )
-                                            )
-                                        ];
-                                    })()
-                                )
-                            )
-                        )
-                    ),
-
-                    // Search/Query
-                    React.createElement('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
-                        React.createElement('h3', { className: "text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2" },
-                            React.createElement(Search, { size: 20 }),
-                            "Ask Questions"
-                        ),
-                        React.createElement('div', { className: "flex gap-2 mb-4" },
-                            React.createElement('input', {
-                                type: "text",
-                                value: searchQuery,
-                                onChange: (e) => setSearchQuery(e.target.value),
-                                placeholder: "Ask: 'what did I make this week?' or 'what did I pay Gus last week?'",
-                                className: "flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
-                                onKeyPress: (e) => e.key === 'Enter' && handleSearch()
-                            }),
-                            React.createElement('button', {
-                                onClick: handleSearch,
-                                className: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                            },
-                                React.createElement(Search, { size: 16 }),
-                                "Ask"
-                            )
-                        ),
-                        searchResults && React.createElement('div', { className: "bg-blue-50 border border-blue-200 rounded-md p-3" },
-                            React.createElement('p', { className: "text-blue-800 font-medium" }, searchResults)
-                        )
-                    ),
-
-                    // Add New Entry
-                    React.createElement('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
-                        React.createElement('h3', { className: "text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2" },
-                            React.createElement(Plus, { size: 20 }),
-                            "Add New Day"
-                        ),
-                        React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" },
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Date"),
-                                React.createElement('input', {
-                                    type: "date",
-                                    value: newEntry.date,
-                                    onChange: (e) => setNewEntry({...newEntry, date: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Check $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomeCheck,
-                                    onChange: (e) => setNewEntry({...newEntry, incomeCheck: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Invoice $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomeInvoice,
-                                    onChange: (e) => setNewEntry({...newEntry, incomeInvoice: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Cash $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomeCash,
-                                    onChange: (e) => setNewEntry({...newEntry, incomeCash: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Venmo $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomeVenmo,
-                                    onChange: (e) => setNewEntry({...newEntry, incomeVenmo: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "PayPal $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomePaypal,
-                                    onChange: (e) => setNewEntry({...newEntry, incomePaypal: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Other $"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.01",
-                                    value: newEntry.incomeOther,
-                                    onChange: (e) => setNewEntry({...newEntry, incomeOther: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Gus Hours"),
-                                React.createElement('input', {
-                                    type: "number",
-                                    step: "0.5",
-                                    value: newEntry.gusHours,
-                                    onChange: (e) => setNewEntry({...newEntry, gusHours: e.target.value}),
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Gus Pay"),
-                                React.createElement('input', {
-                                    type: "text",
-                                    value: `$${((parseFloat(newEntry.gusHours) || 0) * 15).toFixed(2)}`,
-                                    disabled: true,
-                                    className: "w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-                                })
-                            )
-                        ),
-                        React.createElement('div', { className: "mb-4" },
-                            React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Notes"),
-                            React.createElement('input', {
-                                type: "text",
-                                value: newEntry.notes,
-                                onChange: (e) => setNewEntry({...newEntry, notes: e.target.value}),
-                                placeholder: "Job details, pending work, etc.",
+                    h('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" },
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Date"),
+                            h('input', {
+                                type: "date",
+                                value: newEntry.date,
+                                onChange: (e) => setNewEntry({...newEntry, date: e.target.value}),
                                 className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             })
                         ),
-                        React.createElement('button', {
-                            onClick: addEntry,
-                            className: "px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
-                        },
-                            React.createElement(Plus, { size: 16 }),
-                            "Add Entry"
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Check $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomeCheck,
+                                onChange: (e) => setNewEntry({...newEntry, incomeCheck: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Invoice $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomeInvoice,
+                                onChange: (e) => setNewEntry({...newEntry, incomeInvoice: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Cash $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomeCash,
+                                onChange: (e) => setNewEntry({...newEntry, incomeCash: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Venmo $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomeVenmo,
+                                onChange: (e) => setNewEntry({...newEntry, incomeVenmo: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "PayPal $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomePaypal,
+                                onChange: (e) => setNewEntry({...newEntry, incomePaypal: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Other $"),
+                            h('input', {
+                                type: "number",
+                                step: "0.01",
+                                value: newEntry.incomeOther,
+                                onChange: (e) => setNewEntry({...newEntry, incomeOther: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Gus Hours"),
+                            h('input', {
+                                type: "number",
+                                step: "0.5",
+                                value: newEntry.gusHours,
+                                onChange: (e) => setNewEntry({...newEntry, gusHours: e.target.value}),
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            })
+                        ),
+                        h('div', null,
+                            h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Gus Pay"),
+                            h('input', {
+                                type: "text",
+                                value: `$${((parseFloat(newEntry.gusHours) || 0) * 15).toFixed(2)}`,
+                                disabled: true,
+                                className: "w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                            })
                         )
                     ),
+                    h('div', { className: "mb-4" },
+                        h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Notes"),
+                        h('input', {
+                            type: "text",
+                            value: newEntry.notes,
+                            onChange: (e) => setNewEntry({...newEntry, notes: e.target.value}),
+                            placeholder: "Job details, pending work, etc.",
+                            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        })
+                    ),
+                    h('button', {
+                        onClick: addEntry,
+                        className: "px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                    },
+                        h('span', null, "➕"),
+                        "Add Entry"
+                    )
+                ),
 
-                    // Entries Table
-                    React.createElement('div', { className: "bg-white rounded-lg shadow overflow-hidden" },
-                        React.createElement('div', { className: "px-6 py-4 border-b border-gray-200" },
-                            React.createElement('h3', { className: "text-lg font-semibold text-gray-800" }, "Daily Records")
-                        ),
-                        React.createElement('div', { className: "overflow-x-auto" },
-                            React.createElement('table', { className: "w-full" },
-                                React.createElement('thead', { className: "bg-gray-50" },
-                                    React.createElement('tr', null,
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Date"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Check"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Invoice"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Cash"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Venmo"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "PayPal"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Total"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Gus Hrs"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Gus Pay"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Net"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Notes"),
-                                        React.createElement('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Actions")
-                                    )
-                                ),
-                                React.createElement('tbody', { className: "bg-white divide-y divide-gray-200" },
-                                    entries.slice().reverse().map((entry) => 
-                                        React.createElement('tr', { key: entry.id, className: "hover:bg-gray-50" },
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "date",
-                                                        value: editingEntry.date,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, date: e.target.value}),
-                                                        className: "w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    formatDate(entry.date)
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.01",
-                                                        value: editingEntry.incomeCheck,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, incomeCheck: e.target.value}),
-                                                        className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    `$${entry.incomeCheck.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.01",
-                                                        value: editingEntry.incomeInvoice,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, incomeInvoice: e.target.value}),
-                                                        className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    `$${entry.incomeInvoice.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.01",
-                                                        value: editingEntry.incomeCash,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, incomeCash: e.target.value}),
-                                                        className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    `$${entry.incomeCash.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.01",
-                                                        value: editingEntry.incomeVenmo,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, incomeVenmo: e.target.value}),
-                                                        className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    `$${entry.incomeVenmo.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.01",
-                                                        value: editingEntry.incomePaypal,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, incomePaypal: e.target.value}),
-                                                        className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    `$${entry.incomePaypal.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600" },
-                                                editingId === entry.id ?
-                                                    `$${((parseFloat(editingEntry.incomeCheck) || 0) + 
-                                                         (parseFloat(editingEntry.incomeInvoice) || 0) + 
-                                                         (parseFloat(editingEntry.incomeCash) || 0) + 
-                                                         (parseFloat(editingEntry.incomeVenmo) || 0) + 
-                                                         (parseFloat(editingEntry.incomePaypal) || 0) + 
-                                                         (parseFloat(editingEntry.incomeOther) || 0)).toFixed(2)}` :
-                                                    `$${getTotalIncome(entry).toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "number",
-                                                        step: "0.5",
-                                                        value: editingEntry.gusHours,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, gusHours: e.target.value}),
-                                                        className: "w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                    }) :
-                                                    entry.gusHours
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-red-600" },
-                                                editingId === entry.id ?
-                                                    `$${((parseFloat(editingEntry.gusHours) || 0) * 15).toFixed(2)}` :
-                                                    `$${entry.gusPay.toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600" },
-                                                editingId === entry.id ?
-                                                    `$${(((parseFloat(editingEntry.incomeCheck) || 0) + 
-                                                          (parseFloat(editingEntry.incomeInvoice) || 0) + 
-                                                          (parseFloat(editingEntry.incomeCash) || 0) + 
-                                                          (parseFloat(editingEntry.incomeVenmo) || 0) + 
-                                                          (parseFloat(editingEntry.incomePaypal) || 0) + 
-                                                          (parseFloat(editingEntry.incomeOther) || 0)) - 
-                                                         ((parseFloat(editingEntry.gusHours) || 0) * 15)).toFixed(2)}` :
-                                                    `$${(getTotalIncome(entry) - entry.gusPay).toFixed(2)}`
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 text-sm text-gray-500" },
-                                                editingId === entry.id ?
-                                                    React.createElement('input', {
-                                                        type: "text",
-                                                        value: editingEntry.notes,
-                                                        onChange: (e) => setEditingEntry({...editingEntry, notes: e.target.value}),
-                                                        className: "w-full px-2 py-1 border border-gray-300 rounded text-sm",
-                                                        placeholder: "Notes"
-                                                    }) :
-                                                    React.createElement('span', { className: "max-w-xs truncate block" }, entry.notes)
-                                            ),
-                                            React.createElement('td', { className: "px-6 py-4 whitespace-nowrap text-sm" },
-                                                editingId === entry.id ?
-                                                    React.createElement('div', { className: "flex space-x-2" },
-                                                        React.createElement('button', {
-                                                            onClick: saveEditing,
-                                                            className: "text-green-600 hover:text-green-900",
-                                                            title: "Save"
-                                                        },
-                                                            React.createElement(Save, { size: 16 })
-                                                        ),
-                                                        React.createElement('button', {
-                                                            onClick: cancelEditing,
-                                                            className: "text-gray-600 hover:text-gray-900",
-                                                            title: "Cancel"
-                                                        },
-                                                            React.createElement(X, { size: 16 })
-                                                        )
-                                                    ) :
-                                                    React.createElement('div', { className: "flex space-x-2" },
-                                                        React.createElement('button', {
-                                                            onClick: () => startEditing(entry),
-                                                            className: "text-blue-600 hover:text-blue-900",
-                                                            title: "Edit"
-                                                        },
-                                                            React.createElement(Edit2, { size: 16 })
-                                                        ),
-                                                        React.createElement('button', {
-                                                            onClick: () => deleteEntry(entry.id),
-                                                            className: "text-red-600 hover:text-red-900",
-                                                            title: "Delete"
-                                                        },
-                                                            React.createElement(Trash2, { size: 16 })
-                                                        )
-                                                    )
-                                            )
+                // Entries Table
+                h('div', { className: "bg-white rounded-lg shadow overflow-hidden" },
+                    h('div', { className: "px-6 py-4 border-b border-gray-200" },
+                        h('h3', { className: "text-lg font-semibold text-gray-800" }, "Daily Records")
+                    ),
+                    h('div', { className: "overflow-x-auto" },
+                        h('table', { className: "w-full" },
+                            h('thead', { className: "bg-gray-50" },
+                                h('tr', null,
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Date"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Check"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Invoice"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Cash"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Venmo"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "PayPal"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Total"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Gus Hrs"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Gus Pay"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Net"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Notes"),
+                                    h('th', { className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Actions")
+                                )
+                            ),
+                            h('tbody', { className: "bg-white divide-y divide-gray-200" },
+                                entries.slice().reverse().map((entry) => 
+                                    h('tr', { key: entry.id, className: "hover:bg-gray-50" },
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "date",
+                                                    value: editingEntry.date,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, date: e.target.value}),
+                                                    className: "w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                formatDate(entry.date)
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: editingEntry.incomeCheck,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, incomeCheck: e.target.value}),
+                                                    className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                `$${entry.incomeCheck.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: editingEntry.incomeInvoice,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, incomeInvoice: e.target.value}),
+                                                    className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                `$${entry.incomeInvoice.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: editingEntry.incomeCash,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, incomeCash: e.target.value}),
+                                                    className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                `$${entry.incomeCash.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: editingEntry.incomeVenmo,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, incomeVenmo: e.target.value}),
+                                                    className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                `$${entry.incomeVenmo.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: editingEntry.incomePaypal,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, incomePaypal: e.target.value}),
+                                                    className: "w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                `$${entry.incomePaypal.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600" },
+                                            editingId === entry.id ?
+                                                `$${((parseFloat(editingEntry.incomeCheck) || 0) + 
+                                                     (parseFloat(editingEntry.incomeInvoice) || 0) + 
+                                                     (parseFloat(editingEntry.incomeCash) || 0) + 
+                                                     (parseFloat(editingEntry.incomeVenmo) || 0) + 
+                                                     (parseFloat(editingEntry.incomePaypal) || 0) + 
+                                                     (parseFloat(editingEntry.incomeOther) || 0)).toFixed(2)}` :
+                                                `$${getTotalIncome(entry).toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-gray-900" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "number",
+                                                    step: "0.5",
+                                                    value: editingEntry.gusHours,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, gusHours: e.target.value}),
+                                                    className: "w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                                                }) :
+                                                entry.gusHours
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm text-red-600" },
+                                            editingId === entry.id ?
+                                                `$${((parseFloat(editingEntry.gusHours) || 0) * 15).toFixed(2)}` :
+                                                `$${entry.gusPay.toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600" },
+                                            editingId === entry.id ?
+                                                `$${(((parseFloat(editingEntry.incomeCheck) || 0) + 
+                                                      (parseFloat(editingEntry.incomeInvoice) || 0) + 
+                                                      (parseFloat(editingEntry.incomeCash) || 0) + 
+                                                      (parseFloat(editingEntry.incomeVenmo) || 0) + 
+                                                      (parseFloat(editingEntry.incomePaypal) || 0) + 
+                                                      (parseFloat(editingEntry.incomeOther) || 0)) - 
+                                                     ((parseFloat(editingEntry.gusHours) || 0) * 15)).toFixed(2)}` :
+                                                `$${(getTotalIncome(entry) - entry.gusPay).toFixed(2)}`
+                                        ),
+                                        h('td', { className: "px-6 py-4 text-sm text-gray-500" },
+                                            editingId === entry.id ?
+                                                h('input', {
+                                                    type: "text",
+                                                    value: editingEntry.notes,
+                                                    onChange: (e) => setEditingEntry({...editingEntry, notes: e.target.value}),
+                                                    className: "w-full px-2 py-1 border border-gray-300 rounded text-sm",
+                                                    placeholder: "Notes"
+                                                }) :
+                                                h('span', { className: "max-w-xs truncate block" }, entry.notes)
+                                        ),
+                                        h('td', { className: "px-6 py-4 whitespace-nowrap text-sm" },
+                                            editingId === entry.id ?
+                                                h('div', { className: "flex space-x-2" },
+                                                    h('button', {
+                                                        onClick: saveEditing,
+                                                        className: "text-green-600 hover:text-green-900",
+                                                        title: "Save"
+                                                    }, "💾"),
+                                                    h('button', {
+                                                        onClick: cancelEditing,
+                                                        className: "text-gray-600 hover:text-gray-900",
+                                                        title: "Cancel"
+                                                    }, "❌")
+                                                ) :
+                                                h('div', { className: "flex space-x-2" },
+                                                    h('button', {
+                                                        onClick: () => startEditing(entry),
+                                                        className: "text-blue-600 hover:text-blue-900",
+                                                        title: "Edit"
+                                                    }, "✏️"),
+                                                    h('button', {
+                                                        onClick: () => deleteEntry(entry.id),
+                                                        className: "text-red-600 hover:text-red-900",
+                                                        title: "Delete"
+                                                    }, "🗑️")
+                                                )
                                         )
                                     )
                                 )
@@ -754,7 +723,7 @@
                     )
                 )
             );
-        };
+        }
 
         ReactDOM.render(React.createElement(AutoDetailingTracker), document.getElementById('root'));
     </script>
