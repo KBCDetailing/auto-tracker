@@ -100,18 +100,10 @@
             const [editingEntry, setEditingEntry] = useState({});
             const [weekOffset, setWeekOffset] = useState(0);
             const [saveStatus, setSaveStatus] = useState('');
-            const [payouts, setPayouts] = useState({});
-            const [newPayout, setNewPayout] = useState({
-                kullenPay: '',
-                hunterPay: '',
-                notes: ''
-            });
 
             // Load data from localStorage on startup
             useEffect(() => {
                 const savedData = localStorage.getItem('autoDetailingData');
-                const savedPayouts = localStorage.getItem('autoDetailingPayouts');
-                
                 if (savedData) {
                     try {
                         const parsed = JSON.parse(savedData);
@@ -124,18 +116,9 @@
                         setTimeout(() => setSaveStatus(''), 3000);
                     }
                 }
-
-                if (savedPayouts) {
-                    try {
-                        const parsed = JSON.parse(savedPayouts);
-                        setPayouts(parsed);
-                    } catch (error) {
-                        console.error('Error loading saved payouts:', error);
-                    }
-                }
             }, []);
 
-            // Auto-save when entries or payouts change
+            // Auto-save when entries change
             useEffect(() => {
                 if (entries.length > 0) {
                     try {
@@ -146,20 +129,9 @@
                 }
             }, [entries]);
 
-            useEffect(() => {
-                if (Object.keys(payouts).length > 0) {
-                    try {
-                        localStorage.setItem('autoDetailingPayouts', JSON.stringify(payouts));
-                    } catch (error) {
-                        console.error('Error auto-saving payouts:', error);
-                    }
-                }
-            }, [payouts]);
-
             const hardSave = () => {
                 try {
                     localStorage.setItem('autoDetailingData', JSON.stringify(entries));
-                    localStorage.setItem('autoDetailingPayouts', JSON.stringify(payouts));
                     setSaveStatus('✅ Data saved successfully!');
                     setTimeout(() => setSaveStatus(''), 3000);
                 } catch (error) {
@@ -170,18 +142,10 @@
 
             const loadData = () => {
                 const savedData = localStorage.getItem('autoDetailingData');
-                const savedPayouts = localStorage.getItem('autoDetailingPayouts');
-                
-                if (savedData || savedPayouts) {
+                if (savedData) {
                     try {
-                        if (savedData) {
-                            const parsed = JSON.parse(savedData);
-                            setEntries(parsed);
-                        }
-                        if (savedPayouts) {
-                            const parsedPayouts = JSON.parse(savedPayouts);
-                            setPayouts(parsedPayouts);
-                        }
+                        const parsed = JSON.parse(savedData);
+                        setEntries(parsed);
                         setSaveStatus('✅ Data loaded successfully!');
                         setTimeout(() => setSaveStatus(''), 3000);
                     } catch (error) {
@@ -197,63 +161,13 @@
             const clearAllData = () => {
                 if (window.confirm('Are you sure you want to clear ALL data? This cannot be undone!')) {
                     localStorage.removeItem('autoDetailingData');
-                    localStorage.removeItem('autoDetailingPayouts');
                     setEntries([]);
-                    setPayouts({});
                     setSaveStatus('🗑️ All data cleared');
                     setTimeout(() => setSaveStatus(''), 3000);
                 }
             };
 
-            const getWeekKey = (offset) => {
-                const { startOfWeek } = getWeekRange(offset);
-                return `${startOfWeek.getFullYear()}-W${Math.ceil(startOfWeek.getDate() / 7)}-${startOfWeek.getMonth()}`;
-            };
-
-            const addPayout = () => {
-                const weekKey = getWeekKey(weekOffset);
-                const kullen = parseFloat(newPayout.kullenPay) || 0;
-                const hunter = parseFloat(newPayout.hunterPay) || 0;
-                
-                setPayouts({
-                    ...payouts,
-                    [weekKey]: {
-                        kullenPay: kullen,
-                        hunterPay: hunter,
-                        notes: newPayout.notes,
-                        date: new Date().toISOString().split('T')[0]
-                    }
-                });
-
-                setNewPayout({
-                    kullenPay: '',
-                    hunterPay: '',
-                    notes: ''
-                });
-            };
-
-            const deletePayout = () => {
-                const weekKey = getWeekKey(weekOffset);
-                const updatedPayouts = { ...payouts };
-                delete updatedPayouts[weekKey];
-                setPayouts(updatedPayouts);
-            };
-
-            const getSuggestedSplit = () => {
-                const netProfit = currentWeek.totalIncome - currentWeek.totalGusPay;
-                const halfSplit = netProfit / 2;
-                return {
-                    kullen: halfSplit,
-                    hunter: halfSplit,
-                    total: netProfit
-                };
-            };
-
             const formatDate = (dateString) => {
-                const [year, month, day] = dateString.split('-');
-                const date = new Date(year, month - 1, day);
-                return date.toLocaleDateString();
-            };
                 const [year, month, day] = dateString.split('-');
                 const date = new Date(year, month - 1, day);
                 return date.toLocaleDateString();
@@ -567,175 +481,29 @@
                     h('div', { className: "grid grid-cols-2 md:grid-cols-3 gap-4" },
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "💵 Cash:"),
-                            h('span', { className: "font-medium text-green-600" }, `${currentBreakdown.cash.toFixed(2)}`)
+                            h('span', { className: "font-medium text-green-600" }, `$${currentBreakdown.cash.toFixed(2)}`)
                         ),
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "📝 Check:"),
-                            h('span', { className: "font-medium text-blue-600" }, `${currentBreakdown.check.toFixed(2)}`)
+                            h('span', { className: "font-medium text-blue-600" }, `$${currentBreakdown.check.toFixed(2)}`)
                         ),
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "📄 Invoice:"),
-                            h('span', { className: "font-medium text-purple-600" }, `${currentBreakdown.invoice.toFixed(2)}`)
+                            h('span', { className: "font-medium text-purple-600" }, `$${currentBreakdown.invoice.toFixed(2)}`)
                         ),
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "📱 Venmo:"),
-                            h('span', { className: "font-medium text-indigo-600" }, `${currentBreakdown.venmo.toFixed(2)}`)
+                            h('span', { className: "font-medium text-indigo-600" }, `$${currentBreakdown.venmo.toFixed(2)}`)
                         ),
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "💳 PayPal:"),
-                            h('span', { className: "font-medium text-yellow-600" }, `${currentBreakdown.paypal.toFixed(2)}`)
+                            h('span', { className: "font-medium text-yellow-600" }, `$${currentBreakdown.paypal.toFixed(2)}`)
                         ),
                         h('div', { className: "flex justify-between items-center py-2 border-b" },
                             h('span', { className: "text-gray-600" }, "🔄 Other:"),
-                            h('span', { className: "font-medium text-gray-600" }, `${currentBreakdown.other.toFixed(2)}`)
+                            h('span', { className: "font-medium text-gray-600" }, `$${currentBreakdown.other.toFixed(2)}`)
                         )
                     )
-                ),
-
-                // Weekly Payout Section
-                h('div', { className: "bg-white rounded-lg shadow p-6 mb-6" },
-                    h('h3', { className: "text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2" },
-                        h('span', null, "💰"),
-                        `${getWeekLabel(weekOffset)} Payout`
-                    ),
-                    
-                    // Current Payout Display
-                    (() => {
-                        const weekKey = getWeekKey(weekOffset);
-                        const currentPayout = payouts[weekKey];
-                        const suggested = getSuggestedSplit();
-                        
-                        if (currentPayout) {
-                            return h('div', null,
-                                h('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" },
-                                    h('div', { className: "text-center p-4 bg-blue-50 rounded-lg" },
-                                        h('p', { className: "text-2xl font-bold text-blue-600" }, 
-                                            `${currentPayout.kullenPay.toFixed(2)}`
-                                        ),
-                                        h('p', { className: "text-sm text-gray-600" }, "Kullen's Pay")
-                                    ),
-                                    h('div', { className: "text-center p-4 bg-green-50 rounded-lg" },
-                                        h('p', { className: "text-2xl font-bold text-green-600" }, 
-                                            `${currentPayout.hunterPay.toFixed(2)}`
-                                        ),
-                                        h('p', { className: "text-sm text-gray-600" }, "Hunter's Pay")
-                                    ),
-                                    h('div', { className: "text-center p-4 bg-purple-50 rounded-lg" },
-                                        h('p', { className: "text-2xl font-bold text-purple-600" }, 
-                                            `${(currentPayout.kullenPay + currentPayout.hunterPay).toFixed(2)}`
-                                        ),
-                                        h('p', { className: "text-sm text-gray-600" }, "Total Paid Out")
-                                    ),
-                                    h('div', { className: "text-center p-4 bg-gray-50 rounded-lg" },
-                                        h('p', { className: "text-2xl font-bold text-gray-600" }, 
-                                            `${(suggested.total - (currentPayout.kullenPay + currentPayout.hunterPay)).toFixed(2)}`
-                                        ),
-                                        h('p', { className: "text-sm text-gray-600" }, "Remaining")
-                                    )
-                                ),
-                                currentPayout.notes && h('div', { className: "mb-4 p-3 bg-gray-50 rounded-md" },
-                                    h('p', { className: "text-sm text-gray-700" }, 
-                                        h('strong', null, "Notes: "), currentPayout.notes
-                                    )
-                                ),
-                                h('button', {
-                                    onClick: deletePayout,
-                                    className: "px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
-                                },
-                                    h('span', null, "🗑️"),
-                                    "Delete Payout"
-                                )
-                            );
-                        } else {
-                            return h('div', null,
-                                // Suggested Split Display
-                                h('div', { className: "mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg" },
-                                    h('h4', { className: "font-medium text-yellow-800 mb-2" }, "💡 Suggested 50/50 Split:"),
-                                    h('div', { className: "grid grid-cols-3 gap-4 text-center" },
-                                        h('div', null,
-                                            h('p', { className: "text-lg font-bold text-yellow-700" }, `${suggested.kullen.toFixed(2)}`),
-                                            h('p', { className: "text-sm text-yellow-600" }, "Kullen")
-                                        ),
-                                        h('div', null,
-                                            h('p', { className: "text-lg font-bold text-yellow-700" }, `${suggested.hunter.toFixed(2)}`),
-                                            h('p', { className: "text-sm text-yellow-600" }, "Hunter")
-                                        ),
-                                        h('div', null,
-                                            h('p', { className: "text-lg font-bold text-yellow-700" }, `${suggested.total.toFixed(2)}`),
-                                            h('p', { className: "text-sm text-yellow-600" }, "Net Profit")
-                                        )
-                                    )
-                                ),
-
-                                // Payout Input Form
-                                h('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" },
-                                    h('div', null,
-                                        h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Kullen's Pay $"),
-                                        h('input', {
-                                            type: "number",
-                                            step: "0.01",
-                                            value: newPayout.kullenPay,
-                                            onChange: (e) => setNewPayout({...newPayout, kullenPay: e.target.value}),
-                                            placeholder: suggested.kullen.toFixed(2),
-                                            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        })
-                                    ),
-                                    h('div', null,
-                                        h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Hunter's Pay $"),
-                                        h('input', {
-                                            type: "number",
-                                            step: "0.01",
-                                            value: newPayout.hunterPay,
-                                            onChange: (e) => setNewPayout({...newPayout, hunterPay: e.target.value}),
-                                            placeholder: suggested.hunter.toFixed(2),
-                                            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        })
-                                    ),
-                                    h('div', null,
-                                        h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Total"),
-                                        h('input', {
-                                            type: "text",
-                                            value: `${((parseFloat(newPayout.kullenPay) || 0) + (parseFloat(newPayout.hunterPay) || 0)).toFixed(2)}`,
-                                            disabled: true,
-                                            className: "w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-                                        })
-                                    )
-                                ),
-                                h('div', { className: "mb-4" },
-                                    h('label', { className: "block text-sm font-medium text-gray-700 mb-1" }, "Notes"),
-                                    h('input', {
-                                        type: "text",
-                                        value: newPayout.notes,
-                                        onChange: (e) => setNewPayout({...newPayout, notes: e.target.value}),
-                                        placeholder: "Optional notes about this payout...",
-                                        className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    })
-                                ),
-                                h('div', { className: "flex gap-2" },
-                                    h('button', {
-                                        onClick: () => {
-                                            setNewPayout({
-                                                kullenPay: suggested.kullen.toFixed(2),
-                                                hunterPay: suggested.hunter.toFixed(2),
-                                                notes: newPayout.notes
-                                            });
-                                        },
-                                        className: "px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2"
-                                    },
-                                        h('span', null, "⚡"),
-                                        "Use 50/50 Split"
-                                    ),
-                                    h('button', {
-                                        onClick: addPayout,
-                                        className: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
-                                    },
-                                        h('span', null, "💰"),
-                                        "Record Payout"
-                                    )
-                                )
-                            );
-                        }
-                    })()
                 ),
 
                 // Search/Query
